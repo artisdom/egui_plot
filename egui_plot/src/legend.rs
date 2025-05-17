@@ -301,7 +301,6 @@ impl Widget for &mut LegendWidget {
             entries,
             config,
         } = self;
-
         let main_dir = match config.position {
             Corner::LeftTop | Corner::RightTop => Direction::TopDown,
             Corner::LeftBottom | Corner::RightBottom => Direction::BottomUp,
@@ -337,7 +336,7 @@ impl Widget for &mut LegendWidget {
 
                                 // Handle interactions. Alt-clicking must be deferred to end of loop
                                 // since it may affect all entries.
-                                handle_interaction_on_legend_item(&response, entry);
+                                handle_interaction_on_legend_item(&response, entry, config);
                                 if response.clicked() && ui.input(|r| r.modifiers.alt) {
                                     focus_on_item = Some(entry.id);
                                 }
@@ -360,8 +359,19 @@ impl Widget for &mut LegendWidget {
 }
 
 /// Handle per-entry interactions.
-fn handle_interaction_on_legend_item(response: &Response, entry: &mut LegendEntry) {
-    entry.checked ^= response.clicked_by(PointerButton::Primary);
+fn handle_interaction_on_legend_item(
+    response: &Response,
+    entry: &mut LegendEntry,
+    legend: &mut Legend,
+) {
+    if response.clicked_by(PointerButton::Primary) {
+        entry.checked = !entry.checked;
+        if let Some(hidden_items) = legend.hidden_items.as_mut() {
+            hidden_items.remove(&entry.id);
+        }
+        // print out "checked" and "hidden" items
+        println!("checked: {:?}, hidden: {:?}", entry.checked, legend.hidden_items);
+    }
     entry.hovered = response.hovered();
 }
 
